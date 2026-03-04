@@ -83,7 +83,7 @@ function LoginContent() {
                 type="text"
                 value={shopId}
                 onChange={(e) => setShopId(e.target.value)}
-                placeholder="例: S001"
+                placeholder="例: 281001"
                 required
                 className="h-10"
               />

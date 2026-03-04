@@ -6,9 +6,16 @@ import type { ShopUser } from "@/lib/auth-types"
 // 形式: { shopId: { password, shopName, buildingId, buildingName } }
 const SHOP_CREDENTIALS: Record<string, { password: string; shopName: string; buildingId: string; buildingName: string }> = {
   // サンプルデータ - 実際の運用では環境変数から読み込むか、データベースで管理
-  "S001": { password: "shop001pass", shopName: "ラーメン太郎", buildingId: "B001", buildingName: "フードコート渋谷" },
-  "S002": { password: "shop002pass", shopName: "カフェ花子", buildingId: "B001", buildingName: "フードコート渋谷" },
-  "S003": { password: "shop003pass", shopName: "定食屋次郎", buildingId: "B001", buildingName: "フードコート渋谷" },
+  "281001": { password: "pass281001", shopName: "鮨TOKYO「鶴亀」浜松・小田原町店", buildingId: "B001", buildingName: "GMV館" },
+  "281002": { password: "pass281002", shopName: "inu TOKYO店", buildingId: "B001", buildingName: "GMV館" },
+  "281003": { password: "pass281003", shopName: "Ramen凪と天つなぐ", buildingId: "B001", buildingName: "GMV館" },
+  "281004": { password: "pass281004", shopName: "焼肉DXサーロイン焼肉カルビテグ鯨理", buildingId: "B001", buildingName: "GMV館" },
+  "281005": { password: "pass281005", shopName: "BIGGYおお!もうケーキ", buildingId: "B001", buildingName: "GMV館" },
+  "281006": { password: "pass281006", shopName: "BLOOM TOKYOカッブドンとおじパフェへ", buildingId: "B001", buildingName: "GMV館" },
+  "281007": { password: "pass281007", shopName: "Plus 汐留", buildingId: "B001", buildingName: "GMV館" },
+  "281008": { password: "pass281008", shopName: "焼鳥おじしーレモンサワ酒場", buildingId: "B001", buildingName: "GMV館" },
+  "281009": { password: "pass281009", shopName: "寿司居酒屋一番星汐留店", buildingId: "B001", buildingName: "GMV館" },
+  "281010": { password: "pass281010", shopName: "サラリスン 汐留", buildingId: "B001", buildingName: "GMV館" },
 }
 
 // 環境変数から追加の店舗認証情報を読み込む
