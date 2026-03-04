@@ -292,7 +292,7 @@ export default function ShopDashboardPage() {
       : <ArrowDown className="ml-1 h-3 w-3 inline" />
   }
 
-  if (sessionLoading || isLoading) {
+  if (sessionLoading || isLoading || !shopId) {
     return (
       <DashboardLayout userName={shopName} shopName={shopName}>
         <div className="p-6">
