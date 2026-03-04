@@ -44,8 +44,8 @@ function LoginContent() {
       const data = await response.json()
 
       if (response.ok) {
-        router.push("/")
-        router.refresh()
+        // ハードリロードしてSWRキャッシュをクリア
+        window.location.href = "/"
       } else {
         setLoginError(data.error || "ログインに失敗しました")
       }
