@@ -1,7 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useMemo } from "react"
 import useSWR from "swr"
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
@@ -27,7 +26,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { StoreDetailData, StoreDetailPeriod } from "@/lib/spreadsheet"
-import type { ShopSession } from "@/lib/auth-types"
 
 type PeriodTab = "本日" | "今月" | "先月"
 type ProductSortKey = "productName" | "quantity" | "sales"
@@ -43,8 +41,11 @@ function formatCurrency(value: number): string {
 const INITIAL_DISPLAY_COUNT = 5
 const LOAD_MORE_COUNT = 20
 
+// 固定の店舗情報（後で認証と連携する）
+const SHOP_ID = "281001"
+const SHOP_NAME = "鮨TOKYO「鶴亀」浜松・小田原町店"
+
 export default function ShopDashboardPage() {
-  const router = useRouter()
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodTab>("本日")
   const [productsDisplayCount, setProductsDisplayCount] = useState(INITIAL_DISPLAY_COUNT)
   const [combinationsDisplayCount, setCombinationsDisplayCount] = useState(INITIAL_DISPLAY_COUNT)
@@ -57,27 +58,11 @@ export default function ShopDashboardPage() {
   const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>({ prepaid: true, postpaid: true })
   const periods: PeriodTab[] = ["本日", "今月", "先月"]
 
-  // 店舗セッションを取得
-  const { data: shopSession, isLoading: sessionLoading } = useSWR<ShopSession>(
-    "/api/auth/shop-session",
-    fetcher
-  )
-
-  const shopId = shopSession?.user?.shopId
-  const shopName = shopSession?.user?.shopName || ""
-
-  // 店舗データを取得
+  // 店舗データを取得（固定のshopIdを使用）
   const { data: storeData, error, isLoading } = useSWR<StoreDetailData>(
-    shopId ? `/api/shop/${shopId}` : null,
+    `/api/shop/${SHOP_ID}`,
     fetcher
   )
-
-  // 認証チェック
-  useEffect(() => {
-    if (!sessionLoading && (!shopSession?.isAuthenticated || !shopSession?.user)) {
-      router.push("/login")
-    }
-  }, [shopSession, sessionLoading, router])
 
   // 選択された期間に応じたデータを取得
   const currentPeriodData = useMemo((): StoreDetailPeriod => {
@@ -292,9 +277,9 @@ export default function ShopDashboardPage() {
       : <ArrowDown className="ml-1 h-3 w-3 inline" />
   }
 
-  if (sessionLoading || isLoading || !shopId) {
+  if (isLoading) {
     return (
-      <DashboardLayout userName={shopName} shopName={shopName}>
+      <DashboardLayout userName={SHOP_NAME} shopName={SHOP_NAME}>
         <div className="p-6">
           <div className="flex items-center justify-center h-64">
             <div className="text-muted-foreground">読み込み中...</div>
@@ -306,7 +291,7 @@ export default function ShopDashboardPage() {
 
   if (error || !storeData) {
     return (
-      <DashboardLayout userName={shopName} shopName={shopName}>
+      <DashboardLayout userName={SHOP_NAME} shopName={SHOP_NAME}>
         <div className="p-6">
           <div className="flex items-center justify-center h-64">
             <div className="text-destructive">店舗データの取得に失敗しました</div>
@@ -317,7 +302,7 @@ export default function ShopDashboardPage() {
   }
 
   return (
-    <DashboardLayout userName={shopName} shopName={shopName}>
+    <DashboardLayout userName={SHOP_NAME} shopName={SHOP_NAME}>
       <div className="p-4 lg:p-6">
         <div className="max-w-6xl space-y-4">
           {/* 店舗名 */}
@@ -390,7 +375,7 @@ export default function ShopDashboardPage() {
                     {showBreakdown && (
                       <div className="flex gap-3 pt-2 border-t border-border/40">
                         <div className="flex-1">
-                          <div className="text-[11px] text-muted-foreground mb-0.5">事前決済</div>
+                          <div className="text-[11px] text-muted-foreground mb-0.5">事前決��</div>
                           <div className="text-xs text-foreground">{formatCurrency(s.prepaidCustomers)}人</div>
                         </div>
                         <div className="flex-1">
