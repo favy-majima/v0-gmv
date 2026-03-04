@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server"
-import { setShopSession } from "@/lib/auth"
 import type { ShopUser } from "@/lib/auth-types"
 
 // 店舗認証情報（実際の運用では環境変数やデータベースで管理）
@@ -75,9 +74,20 @@ export async function POST(request: Request) {
       userType: "shop",
     }
 
-    await setShopSession(shopUser)
+    // Cookieにセッション情報を設定
+    const sessionData = Buffer.from(JSON.stringify(shopUser)).toString("base64")
+    const isProduction = process.env.NODE_ENV === "production"
+    
+    const response = NextResponse.json({ success: true, shopId, shopName: shopData.shopName })
+    response.cookies.set("favy_shop_session", sessionData, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 7日間
+      path: "/",
+    })
 
-    return NextResponse.json({ success: true, shopId, shopName: shopData.shopName })
+    return response
   } catch (error) {
     console.error("[v0] Shop login error:", error)
     return NextResponse.json(
