@@ -37,7 +37,8 @@ export function Header({ userName = "ゲスト" }: HeaderProps) {
           alt="favy"
           width={64}
           height={24}
-          className="object-contain"
+          priority
+          className="object-contain h-auto"
         />
         <span className="text-[11px] text-muted-foreground font-medium tracking-wide uppercase hidden sm:inline">Mobile Order</span>
       </div>
