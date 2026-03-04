@@ -1,6 +1,6 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import type { User, Session } from "./auth-types"
+import type { User, Session, ShopUser, ShopSession } from "./auth-types"
 
 // アプリURLを正規化（余分なスペースや末尾スラッシュを除去）
 const normalizeUrl = (url: string): string => {
@@ -19,10 +19,11 @@ const OAUTH_CONFIG = {
   redirectUri: `${APP_URL}/api/auth/callback`,
 }
 
-export type { User, Session }
+export type { User, Session, ShopUser, ShopSession }
 
 // セッションCookie名
 const SESSION_COOKIE = "favy_session"
+const SHOP_SESSION_COOKIE = "favy_shop_session"
 
 // セッションを取得
 export async function getSession(): Promise<Session> {
@@ -144,6 +145,56 @@ export async function requireAuth(): Promise<User> {
 
   if (!session.isAuthenticated || !session.user) {
     redirect("/login")
+  }
+
+  return session.user
+}
+
+// 店舗セッションを取得
+export async function getShopSession(): Promise<ShopSession> {
+  const cookieStore = await cookies()
+  const sessionCookie = cookieStore.get(SHOP_SESSION_COOKIE)
+
+  if (!sessionCookie?.value) {
+    return { user: null, isAuthenticated: false }
+  }
+
+  try {
+    const user = JSON.parse(
+      Buffer.from(sessionCookie.value, "base64").toString()
+    )
+    return { user, isAuthenticated: true }
+  } catch {
+    return { user: null, isAuthenticated: false }
+  }
+}
+
+// 店舗セッションを設定
+export async function setShopSession(user: ShopUser): Promise<void> {
+  const cookieStore = await cookies()
+  const sessionData = Buffer.from(JSON.stringify(user)).toString("base64")
+
+  cookieStore.set(SHOP_SESSION_COOKIE, sessionData, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 7, // 7日間
+    path: "/",
+  })
+}
+
+// 店舗セッションを削除
+export async function clearShopSession(): Promise<void> {
+  const cookieStore = await cookies()
+  cookieStore.delete(SHOP_SESSION_COOKIE)
+}
+
+// 店舗認証が必要なページで使用
+export async function requireShopAuth(): Promise<ShopUser> {
+  const session = await getShopSession()
+
+  if (!session.isAuthenticated || !session.user) {
+    redirect("/shop-login")
   }
 
   return session.user
