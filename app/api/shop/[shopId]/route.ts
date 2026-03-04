@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import type { StoreDetailData } from "@/lib/spreadsheet"
+import type { StoreDetailData, PeriodData, WeeklyData, MonthlyData, DayOfWeekHistoryData, HourlyData } from "@/lib/spreadsheet"
 
 // ダミー店舗データ
 const DUMMY_STORES: Record<string, { name: string; totalSales: number; customers: number }> = {
@@ -65,39 +65,134 @@ function generateDummyStoreData(shopId: string): StoreDetailData {
     { products: ["生ビール", "ハイボール"], count: 22, totalSales: Math.round(totalSales * 0.03), prepaidCount: 13, postpaidCount: 9, prepaidSales: Math.round(totalSales * 0.018), postpaidSales: Math.round(totalSales * 0.012) },
   ]
   
-  // 曜日別データ
-  const dayOfWeekHistory: Record<string, { date: string; sales: number; customers: number; avgPerCustomer: number }[]> = {
-    "月": [], "火": [], "水": [], "木": [], "金": [], "土": [], "日": []
-  }
   const dayNames = ["日", "月", "火", "水", "木", "金", "土"]
   const dayMultipliers: Record<string, number> = { "月": 0.8, "火": 0.85, "水": 0.9, "木": 0.95, "金": 1.2, "土": 1.3, "日": 1.1 }
+
+  // 曜日別データ（12週分）
+  const dayOfWeekHistory: Record<string, DayOfWeekHistoryData[]> = {
+    "月": [], "火": [], "水": [], "木": [], "金": [], "土": [], "日": []
+  }
   
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 84; i++) {
     const date = new Date()
     date.setDate(date.getDate() - i)
     const dayName = dayNames[date.getDay()]
     const multiplier = dayMultipliers[dayName]
     const dailyCustomers = Math.round((totalCustomers / 30) * multiplier * (0.8 + Math.random() * 0.4))
     const dailySales = Math.round(dailyCustomers * avgPerCustomer * (0.9 + Math.random() * 0.2))
+    const prepaidDailyCustomers = Math.round(dailyCustomers * prepaidRatio)
+    const postpaidDailyCustomers = dailyCustomers - prepaidDailyCustomers
     
     dayOfWeekHistory[dayName].push({
       date: date.toISOString().split("T")[0],
-      sales: dailySales,
       customers: dailyCustomers,
-      avgPerCustomer: dailyCustomers > 0 ? Math.round(dailySales / dailyCustomers) : 0,
+      averagePerCustomer: dailyCustomers > 0 ? Math.round(dailySales / dailyCustomers) : 0,
+      prepaidCustomers: prepaidDailyCustomers,
+      postpaidCustomers: postpaidDailyCustomers,
+      prepaidAvgPerCustomer: prepaidDailyCustomers > 0 ? Math.round((dailySales * prepaidRatio) / prepaidDailyCustomers) : 0,
+      postpaidAvgPerCustomer: postpaidDailyCustomers > 0 ? Math.round((dailySales * (1 - prepaidRatio)) / postpaidDailyCustomers) : 0,
     })
   }
   
-  // 期間別売上データ
-  const periodSalesData = []
-  for (let i = 29; i >= 0; i--) {
+  // 時間帯別データ（各曜日）
+  const hourlyDataByDayOfWeek: Record<string, HourlyData[]> = {}
+  const hours = ["11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"]
+  const hourMultipliers = [0.5, 1.2, 1.0, 0.4, 0.3, 0.4, 0.8, 1.3, 1.4, 1.2, 0.8]
+  
+  for (const day of Object.keys(dayMultipliers)) {
+    hourlyDataByDayOfWeek[day] = hours.map((hour, idx) => {
+      const baseCustomers = Math.round((totalCustomers / 30 / 11) * dayMultipliers[day] * hourMultipliers[idx])
+      const prepaidHourlyCustomers = Math.round(baseCustomers * prepaidRatio)
+      const postpaidHourlyCustomers = baseCustomers - prepaidHourlyCustomers
+      return {
+        hour,
+        customers: baseCustomers,
+        averagePerCustomer: avgPerCustomer,
+        prepaidCustomers: prepaidHourlyCustomers,
+        postpaidCustomers: postpaidHourlyCustomers,
+        prepaidAvgPerCustomer: Math.round(avgPerCustomer * 1.1),
+        postpaidAvgPerCustomer: Math.round(avgPerCustomer * 0.9),
+      }
+    })
+  }
+  
+  // 日別データ（28日分）
+  const periodData: PeriodData[] = []
+  for (let i = 27; i >= 0; i--) {
     const date = new Date()
     date.setDate(date.getDate() - i)
     const dayName = dayNames[date.getDay()]
     const multiplier = dayMultipliers[dayName]
-    periodSalesData.push({
-      date: date.toISOString().split("T")[0],
-      sales: Math.round((totalSales / 30) * multiplier * (0.8 + Math.random() * 0.4)),
+    const dailySales = Math.round((totalSales / 30) * multiplier * (0.8 + Math.random() * 0.4))
+    const dailyCustomers = Math.round((totalCustomers / 30) * multiplier * (0.8 + Math.random() * 0.4))
+    const prepaidDailySales = Math.round(dailySales * prepaidRatio)
+    const postpaidDailySales = dailySales - prepaidDailySales
+    const prepaidDailyCustomers = Math.round(dailyCustomers * prepaidRatio)
+    const postpaidDailyCustomers = dailyCustomers - prepaidDailyCustomers
+    
+    periodData.push({
+      date: `${date.getMonth() + 1}/${date.getDate()}`,
+      sales: dailySales,
+      customers: dailyCustomers,
+      averagePerCustomer: dailyCustomers > 0 ? Math.round(dailySales / dailyCustomers) : 0,
+      prepaidSales: prepaidDailySales,
+      postpaidSales: postpaidDailySales,
+      prepaidCustomers: prepaidDailyCustomers,
+      postpaidCustomers: postpaidDailyCustomers,
+      prepaidAvgPerCustomer: prepaidDailyCustomers > 0 ? Math.round(prepaidDailySales / prepaidDailyCustomers) : 0,
+      postpaidAvgPerCustomer: postpaidDailyCustomers > 0 ? Math.round(postpaidDailySales / postpaidDailyCustomers) : 0,
+    })
+  }
+  
+  // 週別データ（12週分）
+  const weeklyData: WeeklyData[] = []
+  for (let i = 11; i >= 0; i--) {
+    const weekSales = Math.round((totalSales / 4) * (0.85 + Math.random() * 0.3))
+    const weekCustomers = Math.round((totalCustomers / 4) * (0.85 + Math.random() * 0.3))
+    const prepaidWeekSales = Math.round(weekSales * prepaidRatio)
+    const postpaidWeekSales = weekSales - prepaidWeekSales
+    const prepaidWeekCustomers = Math.round(weekCustomers * prepaidRatio)
+    const postpaidWeekCustomers = weekCustomers - prepaidWeekCustomers
+    
+    weeklyData.push({
+      week: `${12 - i}週前`,
+      sales: weekSales,
+      customers: weekCustomers,
+      averagePerCustomer: weekCustomers > 0 ? Math.round(weekSales / weekCustomers) : 0,
+      prepaidSales: prepaidWeekSales,
+      postpaidSales: postpaidWeekSales,
+      prepaidCustomers: prepaidWeekCustomers,
+      postpaidCustomers: postpaidWeekCustomers,
+      prepaidAvgPerCustomer: prepaidWeekCustomers > 0 ? Math.round(prepaidWeekSales / prepaidWeekCustomers) : 0,
+      postpaidAvgPerCustomer: postpaidWeekCustomers > 0 ? Math.round(postpaidWeekSales / postpaidWeekCustomers) : 0,
+    })
+  }
+  // 最新を「今週」に
+  weeklyData[weeklyData.length - 1].week = "今週"
+  
+  // 月別データ（12ヶ月分）
+  const monthlyData: MonthlyData[] = []
+  for (let i = 11; i >= 0; i--) {
+    const date = new Date()
+    date.setMonth(date.getMonth() - i)
+    const monthSales = Math.round(totalSales * (0.85 + Math.random() * 0.3))
+    const monthCustomers = Math.round(totalCustomers * (0.85 + Math.random() * 0.3))
+    const prepaidMonthSales = Math.round(monthSales * prepaidRatio)
+    const postpaidMonthSales = monthSales - prepaidMonthSales
+    const prepaidMonthCustomers = Math.round(monthCustomers * prepaidRatio)
+    const postpaidMonthCustomers = monthCustomers - prepaidMonthCustomers
+    
+    monthlyData.push({
+      month: `${date.getMonth() + 1}月`,
+      sales: monthSales,
+      customers: monthCustomers,
+      averagePerCustomer: monthCustomers > 0 ? Math.round(monthSales / monthCustomers) : 0,
+      prepaidSales: prepaidMonthSales,
+      postpaidSales: postpaidMonthSales,
+      prepaidCustomers: prepaidMonthCustomers,
+      postpaidCustomers: postpaidMonthCustomers,
+      prepaidAvgPerCustomer: prepaidMonthCustomers > 0 ? Math.round(prepaidMonthSales / prepaidMonthCustomers) : 0,
+      postpaidAvgPerCustomer: postpaidMonthCustomers > 0 ? Math.round(postpaidMonthSales / postpaidMonthCustomers) : 0,
     })
   }
   
@@ -141,7 +236,10 @@ function generateDummyStoreData(shopId: string): StoreDetailData {
     thisMonth: generatePeriodData(1),
     lastMonth: generatePeriodData(0.95),
     dayOfWeekHistory,
-    periodSalesData,
+    hourlyDataByDayOfWeek,
+    periodData,
+    weeklyData,
+    monthlyData,
   }
 }
 
