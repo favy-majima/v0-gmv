@@ -705,7 +705,7 @@ export default function ShopDashboardPage() {
               </div>
 
               <div className="border-t border-border pt-4 mb-4">
-                <label className="text-xs text-muted-foreground block mb-1.5">詳細を見る商品を選択（または上の表��ら行をクリック）</label>
+                <label className="text-xs text-muted-foreground block mb-1.5">詳細を見る商品を選択（または上の表から行をクリック）</label>
                 <Select value={selectedBaseProduct} onValueChange={setSelectedBaseProduct}>
                   <SelectTrigger className="w-full sm:w-[280px] h-9 text-[13px]">
                     <SelectValue placeholder="商品を選択してください" />
