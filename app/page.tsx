@@ -375,7 +375,7 @@ export default function ShopDashboardPage() {
                     {showBreakdown && (
                       <div className="flex gap-3 pt-2 border-t border-border/40">
                         <div className="flex-1">
-                          <div className="text-[11px] text-muted-foreground mb-0.5">事前決��</div>
+                          <div className="text-[11px] text-muted-foreground mb-0.5">事前決済</div>
                           <div className="text-xs text-foreground">{formatCurrency(s.prepaidCustomers)}人</div>
                         </div>
                         <div className="flex-1">
