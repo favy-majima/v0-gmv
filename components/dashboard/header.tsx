@@ -24,7 +24,8 @@ export function Header({ userName = "ゲスト", shopName }: HeaderProps) {
           width={64}
           height={24}
           priority
-          className="object-contain h-auto"
+          className="object-contain"
+          style={{ width: 'auto', height: 'auto' }}
         />
         <span className="text-[11px] text-muted-foreground font-medium tracking-wide uppercase hidden sm:inline">Mobile Order</span>
         {shopName && (
