@@ -15,14 +15,20 @@ interface PaymentFilterProps {
 
 export function PaymentFilterComponent({ filter, onChange }: PaymentFilterProps) {
   const handlePrepaidChange = (checked: boolean) => {
-    // 少なくとも1つはチェックされている状態を維持
-    if (!checked && !filter.postpaid) return
+    // 片方だけtrueの状態でクリックしたら、もう一方をtrueにしてこちらをfalseにする
+    if (!checked && filter.prepaid && !filter.postpaid) {
+      onChange({ prepaid: false, postpaid: true })
+      return
+    }
     onChange({ ...filter, prepaid: checked })
   }
 
   const handlePostpaidChange = (checked: boolean) => {
-    // 少なくとも1つはチェックされている状態を維持
-    if (!checked && !filter.prepaid) return
+    // 片方だけtrueの状態でクリックしたら、もう一方をtrueにしてこちらをfalseにする
+    if (!checked && filter.postpaid && !filter.prepaid) {
+      onChange({ prepaid: true, postpaid: false })
+      return
+    }
     onChange({ ...filter, postpaid: checked })
   }
 
