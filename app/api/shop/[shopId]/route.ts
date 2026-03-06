@@ -196,7 +196,7 @@ function generateDummyStoreData(shopId: string): StoreDetailData {
     })
   }
   
-  const generatePeriodData = (multiplier: number) => ({
+  const generatePeriodData = (multiplier: number, hasForecast: boolean = false, forecastMultiplier: number = 1) => ({
     summary: {
       ...summary,
       totalSales: Math.round(summary.totalSales * multiplier),
@@ -208,6 +208,14 @@ function generateDummyStoreData(shopId: string): StoreDetailData {
       postpaidCustomers: Math.round(summary.postpaidCustomers * multiplier),
       prepaidTables: Math.round(summary.prepaidTables * multiplier),
       postpaidTables: Math.round(summary.postpaidTables * multiplier),
+      // 着地予想（本日・今月のみ）
+      ...(hasForecast ? {
+        forecastSales: Math.round(summary.totalSales * multiplier * forecastMultiplier),
+        forecastCustomers: Math.round(summary.totalCustomers * multiplier * forecastMultiplier),
+        forecastTables: Math.round(summary.totalTables * multiplier * forecastMultiplier),
+        forecastAvgPerCustomer: Math.round(summary.averagePerCustomer),
+        forecastAvgPerTable: Math.round(summary.averagePerTable),
+      } : {}),
     },
     products: products.map(p => ({
       ...p,
@@ -229,12 +237,23 @@ function generateDummyStoreData(shopId: string): StoreDetailData {
     })),
   })
   
+  // 現在時刻から本日の進捗率を計算（例: 14時なら 14/24 = 0.58）
+  const now = new Date()
+  const todayProgress = (now.getHours() + now.getMinutes() / 60) / 24
+  const todayForecastMultiplier = todayProgress > 0 ? 1 / todayProgress : 1
+  
+  // 今月の進捗率を計算（例: 15日なら 15/30 = 0.5）
+  const dayOfMonth = now.getDate()
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+  const monthProgress = dayOfMonth / daysInMonth
+  const monthForecastMultiplier = monthProgress > 0 ? 1 / monthProgress : 1
+  
   return {
     storeId: shopId,
     storeName,
-    today: generatePeriodData(1 / 30),
-    thisMonth: generatePeriodData(1),
-    lastMonth: generatePeriodData(0.95),
+    today: generatePeriodData(1 / 30, true, todayForecastMultiplier),
+    thisMonth: generatePeriodData(1, true, monthForecastMultiplier),
+    lastMonth: generatePeriodData(0.95, false),
     dayOfWeekHistory,
     hourlyDataByDayOfWeek,
     periodData,

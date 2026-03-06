@@ -341,15 +341,22 @@ export default function ShopDashboardPage() {
             const totalTables = getFilteredValue(s.totalTables, s.prepaidTables, s.postpaidTables, paymentFilter)
             const avgPerCustomer = getFilteredAverage(s.averagePerCustomer, s.prepaidAvgPerCustomer, s.postpaidAvgPerCustomer, paymentFilter)
             const avgPerTable = getFilteredAverage(s.averagePerTable, s.prepaidAvgPerTable, s.postpaidAvgPerTable, paymentFilter)
+            // 着地予想を表示するか（本日・今月のみ）
+            const showForecast = selectedPeriod !== "先月" && s.forecastSales !== undefined
             return (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
                 <Card className="bg-card border-border">
                   <CardContent className="p-4">
                     <div className="text-xs text-muted-foreground mb-2">合計金額</div>
-                    <div className="text-xl font-semibold text-foreground tracking-tight mb-3">
+                    <div className="text-xl font-semibold text-foreground tracking-tight mb-1">
                       {formatCurrency(totalSales)}
                       <span className="text-xs font-normal text-muted-foreground ml-0.5">円</span>
                     </div>
+                    {showForecast && (
+                      <div className="text-[11px] text-blue-500 mb-2">
+                        着地予想: ¥{formatCurrency(s.forecastSales || 0)}
+                      </div>
+                    )}
                     {showBreakdown && (
                       <div className="flex gap-3 pt-2 border-t border-border/40">
                         <div className="flex-1">
@@ -368,10 +375,15 @@ export default function ShopDashboardPage() {
                 <Card className="bg-card border-border">
                   <CardContent className="p-4">
                     <div className="text-xs text-muted-foreground mb-2">客数</div>
-                    <div className="text-xl font-semibold text-foreground tracking-tight mb-3">
+                    <div className="text-xl font-semibold text-foreground tracking-tight mb-1">
                       {formatCurrency(totalCustomers)}
                       <span className="text-xs font-normal text-muted-foreground ml-0.5">人</span>
                     </div>
+                    {showForecast && (
+                      <div className="text-[11px] text-blue-500 mb-2">
+                        着地予想: {formatCurrency(s.forecastCustomers || 0)}人
+                      </div>
+                    )}
                     {showBreakdown && (
                       <div className="flex gap-3 pt-2 border-t border-border/40">
                         <div className="flex-1">
@@ -390,10 +402,15 @@ export default function ShopDashboardPage() {
                 <Card className="bg-card border-border">
                   <CardContent className="p-4">
                     <div className="text-xs text-muted-foreground mb-2">テーブル数</div>
-                    <div className="text-xl font-semibold text-foreground tracking-tight mb-3">
+                    <div className="text-xl font-semibold text-foreground tracking-tight mb-1">
                       {formatCurrency(totalTables)}
                       <span className="text-xs font-normal text-muted-foreground ml-0.5">組</span>
                     </div>
+                    {showForecast && (
+                      <div className="text-[11px] text-blue-500 mb-2">
+                        着地予想: {formatCurrency(s.forecastTables || 0)}組
+                      </div>
+                    )}
                     {showBreakdown && (
                       <div className="flex gap-3 pt-2 border-t border-border/40">
                         <div className="flex-1">
@@ -412,10 +429,15 @@ export default function ShopDashboardPage() {
                 <Card className="bg-card border-border">
                   <CardContent className="p-4">
                     <div className="text-xs text-muted-foreground mb-2">客単価</div>
-                    <div className="text-xl font-semibold text-foreground tracking-tight mb-3">
+                    <div className="text-xl font-semibold text-foreground tracking-tight mb-1">
                       {formatCurrency(avgPerCustomer)}
                       <span className="text-xs font-normal text-muted-foreground ml-0.5">円</span>
                     </div>
+                    {showForecast && (
+                      <div className="text-[11px] text-blue-500 mb-2">
+                        着地予想: ¥{formatCurrency(s.forecastAvgPerCustomer || 0)}
+                      </div>
+                    )}
                     {showBreakdown && (
                       <div className="flex gap-3 pt-2 border-t border-border/40">
                         <div className="flex-1">
@@ -434,10 +456,15 @@ export default function ShopDashboardPage() {
                 <Card className="bg-card border-border">
                   <CardContent className="p-4">
                     <div className="text-xs text-muted-foreground mb-2">テーブル単価</div>
-                    <div className="text-xl font-semibold text-foreground tracking-tight mb-3">
+                    <div className="text-xl font-semibold text-foreground tracking-tight mb-1">
                       {formatCurrency(avgPerTable)}
                       <span className="text-xs font-normal text-muted-foreground ml-0.5">円</span>
                     </div>
+                    {showForecast && (
+                      <div className="text-[11px] text-blue-500 mb-2">
+                        着地予想: ¥{formatCurrency(s.forecastAvgPerTable || 0)}
+                      </div>
+                    )}
                     {showBreakdown && (
                       <div className="flex gap-3 pt-2 border-t border-border/40">
                         <div className="flex-1">
